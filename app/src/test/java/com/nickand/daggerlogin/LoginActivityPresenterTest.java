@@ -15,7 +15,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class PresenterUnitTest {
+public class LoginActivityPresenterTest {
 
     private LoginActivityPresenter presenter;
     private User user;
