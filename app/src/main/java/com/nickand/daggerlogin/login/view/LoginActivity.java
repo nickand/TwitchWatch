@@ -69,6 +69,24 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
                 t.printStackTrace();
             }
         });
+
+        Call<Twitch> callGame = twitchAPI.getGame(CLIENT_ID, "Pokemon platinum");
+        callGame.enqueue(new Callback<Twitch>() {
+            @Override
+            public void onResponse(Call<Twitch> call, Response<Twitch> response) {
+                List<Game> games = response.body().getGame();
+                for(Game game: games) {
+                    System.out.println("GAME: "+game.getName());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Twitch> call, Throwable t) {
+                t.printStackTrace();
+            }
+        });
+
+
     }
 
     @Override
