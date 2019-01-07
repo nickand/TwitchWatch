@@ -11,12 +11,26 @@ import com.nickand.daggerlogin.R;
 import com.nickand.daggerlogin.login.LoginActivityMVP;
 import com.nickand.daggerlogin.root.App;
 
+import java.util.List;
+
 import javax.inject.Inject;
+
+import http.TwitchAPI;
+import http.twitch.Game;
+import http.twitch.Twitch;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity implements LoginActivityMVP.View {
 
+    private static final String CLIENT_ID = "2rxz79lan41l7apg2zrmx8oj1050i4";
+
     @Inject
     LoginActivityMVP.Presenter presenter;
+
+    @Inject
+    TwitchAPI twitchAPI;
 
     private EditText nameEditText, lastNameEditText;
     private Button loginButton;
@@ -37,6 +51,22 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
             @Override
             public void onClick(View v) {
                 presenter.loginButtonClicked();
+            }
+        });
+
+        Call<Twitch> call = twitchAPI.getTopGames(CLIENT_ID);
+        call.enqueue(new Callback<Twitch>() {
+            @Override
+            public void onResponse(Call<Twitch> call, Response<Twitch> response) {
+                List<Game> topGames = response.body().getGame();
+                for(Game game: topGames) {
+                    System.out.println(game.getName());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Twitch> call, Throwable t) {
+                t.printStackTrace();
             }
         });
     }
