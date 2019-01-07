@@ -6,9 +6,10 @@ import com.nickand.daggerlogin.login.LoginModule;
 import javax.inject.Singleton;
 
 import dagger.Component;
+import http.TwitchModule;
 
 @Singleton
-@Component(modules = {ApplicationModule.class, LoginModule.class})
+@Component(modules = {ApplicationModule.class, LoginModule.class, TwitchModule.class})
 public interface ApplicationComponent {
 
     void inject(LoginActivity target);
