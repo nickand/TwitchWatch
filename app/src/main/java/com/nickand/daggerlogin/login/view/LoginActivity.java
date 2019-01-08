@@ -21,6 +21,7 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
+import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 
 public class LoginActivity extends AppCompatActivity implements LoginActivityMVP.View {
@@ -92,6 +93,11 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
             public Observable<Game> apply(Twitch twitch) {
                 return Observable.fromIterable(twitch.getGame());
             }
+        }).filter(new Predicate<Game>() {
+            @Override
+            public boolean test(Game game) {
+                return game.getName().startsWith("W");
+            }
         }).flatMap(new Function<Game, Observable<String>>() {
             @Override
             public Observable<String> apply(Game game) {
@@ -107,7 +113,7 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
 
                 @Override
                 public void onNext(String name) {
-                    System.out.println("Rx name: "+name);
+                    System.out.println("Rx name: " + name);
                 }
 
                 @Override
