@@ -2,7 +2,6 @@ package com.nickand.daggerlogin.login.view;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -23,7 +22,6 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
-import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
 
 public class LoginActivity extends AppCompatActivity implements LoginActivityMVP.View {
@@ -51,12 +49,7 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
         loginButton = findViewById(R.id.buttonLogin);
         loginButton = findViewById(R.id.buttonLogin);
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                presenter.loginButtonClicked();
-            }
-        });
+        loginButton.setOnClickListener(v -> presenter.loginButtonClicked());
 
         /*Call<Twitch> call = twitchAPI.getTopGames(CLIENT_ID);
         call.enqueue(new Callback<Twitch>() {
@@ -91,24 +84,11 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
         });*/
 
         twitchAPI.getTopGamesObservable(CLIENT_ID)
-            .flatMap(new Function<Twitch, Observable<Game>>() {
-                @Override
-                public Observable<Game> apply(Twitch twitch) {
-                    return Observable.fromIterable(twitch.getGame());
-                }
-            })
-            .filter(new Predicate<Game>() {
-                @Override
-                public boolean test(Game game) {
-                    return game.getName().contains("C") || game.getName().contains("c");
-                }
-            })
-            .flatMap(new Function<Game, Observable<String>>() {
-                @Override
-                public Observable<String> apply(Game game) {
-                    return Observable.just(game.getName());
-                }
-            }).subscribeOn(Schedulers.io())
+            .flatMap((Function<Twitch, Observable<Game>>)
+                twitch -> Observable.fromIterable(twitch.getGame()))
+            .filter(game -> game.getName().contains("C") || game.getName().contains("c"))
+            .flatMap((Function<Game, Observable<String>>)
+                game -> Observable.just(game.getName())).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(new Observer<String>() {
                 @Override
@@ -134,41 +114,21 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
 
         //-----------Get steams------------------------------//
         twitchAPI.getStreams(CLIENT_ID, "en")
-            .flatMap(new Function<Streams, Observable<StreamInfo>>() {
-                @Override
-                public Observable<StreamInfo> apply(Streams twitch) {
-                    return Observable.fromIterable(twitch.getData());
-                }
-            })
-            .filter(new Predicate<StreamInfo>() {
-                @Override
-                public boolean test(StreamInfo streamInfo) {
-                    return !streamInfo.getGameId().isEmpty() &&
-                        streamInfo.getViewerCount() >= 10000 &&
-                        streamInfo.getLanguage().equals("en");
-                }
-            })
-            .flatMap(new Function<StreamInfo, Observable<String>>() {
-                @Override
-                public Observable<String> apply(final StreamInfo streamInfo) {
-                    return twitchAPI.getGameObservable(CLIENT_ID, streamInfo.getGameId())
-                        .flatMap(new Function<Twitch, Observable<Game>>() {
-                            @Override
-                            public Observable<Game> apply(Twitch twitch) {
-                                return Observable.fromIterable(twitch.getGame());
-                            }
-                        })
-                        .flatMap(new Function<Game, Observable<String>>() {
-                            @Override
-                            public Observable<String> apply(Game game) throws Exception {
-                                String streamTitle = streamInfo.getTitle();
-                                String gameName = game.getName();
+            .flatMap((Function<Streams, Observable<StreamInfo>>)
+                twitch -> Observable.fromIterable(twitch.getData()))
+            .filter(streamInfo -> !streamInfo.getGameId().isEmpty() &&
+                streamInfo.getViewerCount() >= 10000 &&
+                streamInfo.getLanguage().equals("en"))
+            .flatMap((Function<StreamInfo, Observable<String>>)
+                streamInfo -> twitchAPI.getGameObservable(CLIENT_ID, streamInfo.getGameId())
+                .flatMap((Function<Twitch, Observable<Game>>)
+                    twitch -> Observable.fromIterable(twitch.getGame()))
+                .flatMap((Function<Game, Observable<String>>) game -> {
+                    String streamTitle = streamInfo.getTitle();
+                    String gameName = game.getName();
 
-                                return Observable.just("Stream Title: "+streamTitle+" Game Name: "+gameName);
-                            }
-                        });
-                }
-            })
+                    return Observable.just("Stream Title: "+streamTitle+" Game Name: "+gameName);
+                }))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(new Observer<String>() {
