@@ -18,9 +18,7 @@ import http.twitch.StreamInfo;
 import http.twitch.Streams;
 import http.twitch.Twitch;
 import io.reactivex.Observable;
-import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
@@ -90,27 +88,9 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
             .flatMap((Function<Game, Observable<String>>)
                 game -> Observable.just(game.getName())).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(new Observer<String>() {
-                @Override
-                public void onSubscribe(Disposable d) {
-
-                }
-
-                @Override
-                public void onNext(String name) {
-                    System.out.println("Rx name: " + name);
-                }
-
-                @Override
-                public void onError(Throwable e) {
-                    e.printStackTrace();
-                }
-
-                @Override
-                public void onComplete() {
-
-                }
-            });
+            .doOnNext(System.out::println)
+            .doOnError(Throwable::printStackTrace)
+            .subscribe();
 
         //-----------Get steams------------------------------//
         twitchAPI.getStreams(CLIENT_ID, "en")
@@ -121,37 +101,19 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
                 streamInfo.getLanguage().equals("en"))
             .flatMap((Function<StreamInfo, Observable<String>>)
                 streamInfo -> twitchAPI.getGameObservable(CLIENT_ID, streamInfo.getGameId())
-                .flatMap((Function<Twitch, Observable<Game>>)
-                    twitch -> Observable.fromIterable(twitch.getGame()))
-                .flatMap((Function<Game, Observable<String>>) game -> {
-                    String streamTitle = streamInfo.getTitle();
-                    String gameName = game.getName();
+                    .flatMap((Function<Twitch, Observable<Game>>)
+                        twitch -> Observable.fromIterable(twitch.getGame()))
+                    .flatMap((Function<Game, Observable<String>>) game -> {
+                        String streamTitle = streamInfo.getTitle();
+                        String gameName = game.getName();
 
-                    return Observable.just("Stream Title: "+streamTitle+" Game Name: "+gameName);
-                }))
+                        return Observable.just("Stream Title: " + streamTitle + " Game Name: " + gameName);
+                    }))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(new Observer<String>() {
-                @Override
-                public void onSubscribe(Disposable d) {
-
-                }
-
-                @Override
-                public void onNext(String streamsTitle) {
-                    System.out.println(streamsTitle);
-                }
-
-                @Override
-                public void onError(Throwable e) {
-                    e.printStackTrace();
-                }
-
-                @Override
-                public void onComplete() {
-
-                }
-            });
+            .doOnNext(System.out::println)
+            .doOnError(Throwable::printStackTrace)
+            .subscribe();
     }
 
     @Override
