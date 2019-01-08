@@ -18,7 +18,9 @@ import http.twitch.StreamInfo;
 import http.twitch.Streams;
 import http.twitch.Twitch;
 import io.reactivex.Observable;
+import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
@@ -88,9 +90,27 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
             .flatMap((Function<Game, Observable<String>>)
                 game -> Observable.just(game.getName())).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnNext(System.out::println)
-            .doOnError(Throwable::printStackTrace)
-            .subscribe();
+            .subscribe(new Observer<String>() {
+                @Override
+                public void onSubscribe(Disposable d) {
+
+                }
+
+                @Override
+                public void onNext(String gameName) {
+                    System.out.println(gameName);
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onComplete() {
+
+                }
+            });
 
         //-----------Get steams------------------------------//
         twitchAPI.getStreams(CLIENT_ID, "en")
@@ -111,9 +131,27 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
                     }))
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnNext(System.out::println)
-            .doOnError(Throwable::printStackTrace)
-            .subscribe();
+            .subscribe(new Observer<String>() {
+                @Override
+                public void onSubscribe(Disposable d) {
+
+                }
+
+                @Override
+                public void onNext(String streamGame) {
+                    System.out.println(streamGame);
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onComplete() {
+
+                }
+            });
     }
 
     @Override
