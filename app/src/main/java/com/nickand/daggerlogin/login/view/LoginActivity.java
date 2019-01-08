@@ -15,6 +15,8 @@ import javax.inject.Inject;
 
 import http.TwitchAPI;
 import http.twitch.Game;
+import http.twitch.StreamInfo;
+import http.twitch.Streams;
 import http.twitch.Twitch;
 import io.reactivex.Observable;
 import io.reactivex.Observer;
@@ -88,22 +90,25 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
             }
         });*/
 
-        twitchAPI.getTopGamesObservable(CLIENT_ID).flatMap(new Function<Twitch, Observable<Game>>() {
-            @Override
-            public Observable<Game> apply(Twitch twitch) {
-                return Observable.fromIterable(twitch.getGame());
-            }
-        }).filter(new Predicate<Game>() {
-            @Override
-            public boolean test(Game game) {
-                return game.getName().startsWith("W");
-            }
-        }).flatMap(new Function<Game, Observable<String>>() {
-            @Override
-            public Observable<String> apply(Game game) {
-                return Observable.just(game.getName());
-            }
-        }).subscribeOn(Schedulers.io())
+        twitchAPI.getTopGamesObservable(CLIENT_ID)
+            .flatMap(new Function<Twitch, Observable<Game>>() {
+                @Override
+                public Observable<Game> apply(Twitch twitch) {
+                    return Observable.fromIterable(twitch.getGame());
+                }
+            })
+            .filter(new Predicate<Game>() {
+                @Override
+                public boolean test(Game game) {
+                    return game.getName().contains("C") || game.getName().contains("c");
+                }
+            })
+            .flatMap(new Function<Game, Observable<String>>() {
+                @Override
+                public Observable<String> apply(Game game) {
+                    return Observable.just(game.getName());
+                }
+            }).subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(new Observer<String>() {
                 @Override
@@ -127,6 +132,66 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
                 }
             });
 
+        //-----------Get steams------------------------------//
+        twitchAPI.getStreams(CLIENT_ID, "en")
+            .flatMap(new Function<Streams, Observable<StreamInfo>>() {
+                @Override
+                public Observable<StreamInfo> apply(Streams twitch) {
+                    return Observable.fromIterable(twitch.getData());
+                }
+            })
+            .filter(new Predicate<StreamInfo>() {
+                @Override
+                public boolean test(StreamInfo streamInfo) {
+                    return !streamInfo.getGameId().isEmpty() &&
+                        streamInfo.getViewerCount() >= 10000 &&
+                        streamInfo.getLanguage().equals("en");
+                }
+            })
+            .flatMap(new Function<StreamInfo, Observable<String>>() {
+                @Override
+                public Observable<String> apply(final StreamInfo streamInfo) {
+                    return twitchAPI.getGameObservable(CLIENT_ID, streamInfo.getGameId())
+                        .flatMap(new Function<Twitch, Observable<Game>>() {
+                            @Override
+                            public Observable<Game> apply(Twitch twitch) {
+                                return Observable.fromIterable(twitch.getGame());
+                            }
+                        })
+                        .flatMap(new Function<Game, Observable<String>>() {
+                            @Override
+                            public Observable<String> apply(Game game) throws Exception {
+                                String streamTitle = streamInfo.getTitle();
+                                String gameName = game.getName();
+
+                                return Observable.just("Stream Title: "+streamTitle+" Game Name: "+gameName);
+                            }
+                        });
+                }
+            })
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Observer<String>() {
+                @Override
+                public void onSubscribe(Disposable d) {
+
+                }
+
+                @Override
+                public void onNext(String streamsTitle) {
+                    System.out.println(streamsTitle);
+                }
+
+                @Override
+                public void onError(Throwable e) {
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onComplete() {
+
+                }
+            });
     }
 
     @Override
