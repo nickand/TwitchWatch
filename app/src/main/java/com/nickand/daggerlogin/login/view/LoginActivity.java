@@ -12,6 +12,8 @@ import com.nickand.daggerlogin.root.App;
 
 import javax.inject.Inject;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import http.TwitchAPI;
 import http.twitch.Game;
 import http.twitch.StreamInfo;
@@ -34,7 +36,11 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
     @Inject
     TwitchAPI twitchAPI;
 
-    private EditText nameEditText, lastNameEditText;
+    @BindView(R.id.editTextName)
+    private EditText nameEditText;
+    @BindView(R.id.editTextLastName)
+    private EditText  lastNameEditText;
+    @BindView(R.id.buttonLogin)
     private Button loginButton;
 
     @Override
@@ -42,12 +48,9 @@ public class LoginActivity extends AppCompatActivity implements LoginActivityMVP
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ((App) getApplicationContext()).getComponent().inject(this);
+        ButterKnife.bind(this);
 
-        nameEditText = findViewById(R.id.editTextName);
-        lastNameEditText = findViewById(R.id.editTextLastName);
-        loginButton = findViewById(R.id.buttonLogin);
-        loginButton = findViewById(R.id.buttonLogin);
+        ((App) getApplicationContext()).getComponent().inject(this);
 
         loginButton.setOnClickListener(v -> presenter.loginButtonClicked());
 
